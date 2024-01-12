@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<select id="micSelect"></select>
+<button onclick="startRecording()">Start Recording</button>
+<button onclick="stopRecording()">Stop Recording</button>
+<a id="downloadLink" style="display: none;">Download Recording</a>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    listAudioDevices(); // Call this function to populate the microphone list
+});
+
+async function listAudioDevices() {
+    try {
+        // Request microphone access
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Then list devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+
+        const select = document.getElementById('micSelect');
+        audioInputDevices.forEach(device => {
+            let option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Microphone ${select.options.length + 1}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error accessing media devices:', error);
+        // Handle the error or inform the user as needed
+    }
+}
+
+function getUserSelectedMic() {
+    const select = document.getElementById('micSelect');
+    return select.value;
+}
+
+async function startRecording() {
+    const deviceId = getUserSelectedMic();
+    let stream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: deviceId ? { exact: deviceId } : undefined }
+    });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = []; // Clear any previous recording chunks
+
+    mediaRecorder.addEventListener("dataavailable", event => {
+        audioChunks.push(event.data);
+    });
+
+    mediaRecorder.addEventListener('stop', () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'audio.webm');
+
+        fetch('http://127.0.0.1:5000/api/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            console.log('Success:', result);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+    mediaRecorder.start();
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+
+    mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = audioUrl;
+        downloadLink.download = 'recorded_audio.webm';
+        downloadLink.style.display = 'block';
+    };
+}
+</script>
+
+</body>
+</html>
