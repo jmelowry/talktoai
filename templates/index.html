@@ -1,94 +1,161 @@
 <!DOCTYPE html>
 <html>
+
 <body>
 
-<select id="micSelect"></select>
-<button onclick="startRecording()">Start Recording</button>
-<button onclick="stopRecording()">Stop Recording</button>
-<a id="downloadLink" style="display: none;">Download Recording</a>
+    <select id="micSelect"></select>
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+    <button id="start-btn">Start Dictation</button>
+    <a id="downloadLink" style="display: none;">Download Recording</a>
+    <p id="text"></p>
 
-<script>
-let mediaRecorder;
-let audioChunks = [];
+    <script>
+        // Variables for recording
+        let mediaRecorder;
+        let audioChunks = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    listAudioDevices(); // Call this function to populate the microphone list
-});
+        // Variables for speech recognition
+        var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+        var recognition = new SpeechRecognition();
+        var isRecording = false; // To track if recording is in progress
 
-async function listAudioDevices() {
-    try {
-        // Request microphone access
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        // Then list devices
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
-
-        const select = document.getElementById('micSelect');
-        audioInputDevices.forEach(device => {
-            let option = document.createElement('option');
-            option.value = device.deviceId;
-            option.text = device.label || `Microphone ${select.options.length + 1}`;
-            select.appendChild(option);
+        document.addEventListener('DOMContentLoaded', () => {
+            listAudioDevices(); // Call this function to populate the microphone list
         });
-    } catch (error) {
-        console.error('Error accessing media devices:', error);
-        // Handle the error or inform the user as needed
-    }
-}
 
-function getUserSelectedMic() {
-    const select = document.getElementById('micSelect');
-    return select.value;
-}
+        async function listAudioDevices() {
+            try {
+                // Request microphone access
+                await navigator.mediaDevices.getUserMedia({ audio: true });
 
-async function startRecording() {
-    const deviceId = getUserSelectedMic();
-    let stream = await navigator.mediaDevices.getUserMedia({
-        audio: { deviceId: deviceId ? { exact: deviceId } : undefined }
-    });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = []; // Clear any previous recording chunks
+                // Then list devices
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
 
-    mediaRecorder.addEventListener("dataavailable", event => {
-        audioChunks.push(event.data);
-    });
+                const select = document.getElementById('micSelect');
+                audioInputDevices.forEach(device => {
+                    let option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Microphone ${select.options.length + 1}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                // Handle the error or inform the user as needed
+            }
+        }
 
-    mediaRecorder.addEventListener('stop', () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'audio.webm');
+        function getUserSelectedMic() {
+            const select = document.getElementById('micSelect');
+            return select.value;
+        }
 
-        fetch('http://127.0.0.1:5000/api/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            console.log('Success:', result);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    });
+        // Modified startRecording to check if dictation is active
+        async function startRecording() {
+            if (!isRecording) {
+                const deviceId = getUserSelectedMic();
+                let stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { deviceId: deviceId ? { exact: deviceId } : undefined }
+                });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = []; // Clear any previous recording chunks
 
-    mediaRecorder.start();
-}
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
 
-function stopRecording() {
-    mediaRecorder.stop();
+                mediaRecorder.addEventListener('stop', () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, 'audio.webm');
 
-    mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
+                    fetch('http://127.0.0.1:5000/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            console.log('Success:', result);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
 
-        const downloadLink = document.getElementById('downloadLink');
-        downloadLink.href = audioUrl;
-        downloadLink.download = 'recorded_audio.webm';
-        downloadLink.style.display = 'block';
-    };
-}
-</script>
+                mediaRecorder.start();
+            } else {
+                alert("Stop dictation before starting the recording.");
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = audioUrl;
+                downloadLink.download = 'recorded_audio.webm';
+                downloadLink.style.display = 'block';
+            };
+        }
+
+        // Speech recognition setup
+        var textParagraph = document.getElementById('text');
+        var startButton = document.getElementById('start-btn');
+
+        recognition.continuous = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function () {
+            isRecording = true;
+        };
+
+        recognition.onresult = function (event) {
+            var current = event.resultIndex;
+            var transcript = event.results[current][0].transcript;
+            textParagraph.textContent += transcript;
+        };
+
+        recognition.onspeechend = function () {
+            isRecording = false;
+        };
+
+        recognition.onerror = function (event) {
+            console.error('Speech recognition error:', event.error);
+
+            // Handle different types of errors
+            switch (event.error) {
+                case 'no-speech':
+                    alert("No speech was detected. Please try again.");
+                    break;
+                case 'audio-capture':
+                    alert("Microphone is not available. Please check your microphone settings.");
+                    break;
+                case 'not-allowed':
+                    alert("Permission to use microphone is denied. Please enable microphone access.");
+                    break;
+                // Add more cases as needed
+                default:
+                    alert("An error occurred: " + event.error);
+            }
+
+            isRecording = false; // Reset the recording flag
+        };
+
+
+        startButton.onclick = function () {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                recognition.start();
+            } else {
+                alert("Stop the recording before starting dictation.");
+            }
+        };
+    </script>
 
 </body>
+
 </html>

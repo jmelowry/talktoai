@@ -9,6 +9,11 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
+@app.route('/recognize')
+def speechrecognition():
+    return render_template('speechrecognition.html')
+
+
 @app.route('/api/audio', methods=['POST'])
 def transcribe_audio():
     # Get the audio data from the request
