@@ -1,64 +1,24 @@
-/* page.module.css */
-.main {
-  background-color: #333; /* Dark grey background */
-  color: #f5f5f5; /* Nearly white text */
-  font-family: 'Times New Roman', serif; /* Serif font */
-  min-height: 100vh;
-  padding: 50px;
-  box-sizing: border-box;
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
 }
 
-.hamburgerMenu {
-  position: relative;
-  z-index: 2; /* Ensures the hamburger icon is above the sliding menu */
-}
-
-.menuContent {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 250px;
-  height: 100%;
-  background-color: #333;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-  z-index: 1; /* Lower than hamburgerMenu */
-  display: none; /* Initially hidden */
-}
-
-.menuContent.visible {
-  transform: translateX(0);
-  display: block; /* Shown when visible */
-}
-
-#menuToggle {
-  position: absolute;
-  left: -9999px; /* Hides the checkbox off-screen */
-}
-
-.hamburgerIcon {
-  cursor: pointer;
-}
-
-.menuContent.visible {
-  display: block;
-}
-.description textarea {
+.textarea {
   width: 100%;
   height: 200px;
-  background-color: #444; /* Slightly lighter grey for textarea */
-  color: inherit;
-  border: none;
+  margin-top: 20px;
   padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   box-sizing: border-box;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.7; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.pulsing {
-  animation: pulse 2s infinite;
+.dropdown {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
 }
