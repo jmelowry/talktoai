@@ -1,24 +1,45 @@
+body {
+  background-color: #F0F0F0; /* Light grey background, common in early web designs */
+  font-family: 'Comic Sans MS', 'Arial', sans-serif; /* Comic Sans for a playful, Y2K vibe */
+  color: #003366; /* Deep blue, reminiscent of early web */
+}
+
 .container {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  text-align: center;
+  background-color: #FFF;
+  border: 2px solid #0000FF; /* Bold borders were a classic */
+  box-shadow: 5px 5px 0 #0000FF; /* Simple shadow effect */
+}
+
+.button, select, textarea {
+  font-family: inherit;
+  background-color: #C0C0C0; /* Metallic grey, popular in Y2K design */
+  border: 1px solid #0000FF;
+  padding: 10px;
+  font-size: 16px; /* Slightly larger font */
+  color: #003366;
+}
+
+.button {
+  cursor: pointer;
+  background-image: linear-gradient(to bottom, #99CCFF, #6699FF); /* Gradient buttons */
+  text-shadow: 1px 1px #FFFFFF; /* Text shadow for depth */
+}
+
+.button:hover {
+  background-image: linear-gradient(to bottom, #6699FF, #3366CC);
 }
 
 .textarea {
   width: 100%;
-  height: 200px;
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+  height: 150px;
+  margin-top: 10px;
 }
 
 .dropdown {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
+  margin-top: 10px;
 }
+
+/* Add additional styling as needed */
