@@ -59,25 +59,21 @@ export default function Home() {
   const [selectedInput, setSelectedInput] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
-  const recognitionActive = useRef<boolean>(false);
 
   const toggleListening = () => {
-    setIsListening(!isListening);
     if (!recognition.current) return;
 
-    if (!isListening && !recognitionActive.current) {
+    if (!isListening) {
       recognition.current.start();
-      recognitionActive.current = true;
     } else {
       recognition.current.stop();
-      recognitionActive.current = false;
     }
+    setIsListening(!isListening);
   };
 
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
-        console.log('Microphone access granted');
         return navigator.mediaDevices.enumerateDevices();
       })
       .then(devices => {
@@ -95,16 +91,12 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Initialize recognition instance
       recognition.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       const recognitionInstance = recognition.current;
-  
-      // Configure recognition instance
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = 'en-US';
-  
-      // Event handlers
+
       recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -120,39 +112,13 @@ export default function Home() {
         }
         setInterimTranscript(interim);
       };
-  
+
       recognitionInstance.onend = () => {
-        recognitionActive.current = false;
-      };
-  
-      recognitionInstance.onstart = () => {
-        recognitionActive.current = true;
-      };
-  
-      let restartTimeout;
-      recognitionInstance.onsoundend = () => {
-        if (isListening && !recognitionActive.current) {
-          restartTimeout = setTimeout(() => {
-            if (isListening && !recognitionActive.current) {
-              recognitionInstance.start();
-              recognitionActive.current = true;
-            }
-          }, 1000);
-        }
-      };
-  
-      if (isListening) {
-        recognitionInstance.start();
-      }
-  
-      return () => {
-        clearTimeout(restartTimeout);
-        recognitionInstance.stop();
-        recognitionActive.current = false;
+        setIsListening(false);
       };
     }
-  }, [isListening]);
-  
+  }, []);
+
   return (
     <div className={styles.container}>
       <button onClick={toggleListening}>
