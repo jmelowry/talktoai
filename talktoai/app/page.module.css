@@ -1,24 +1,45 @@
+/* page.module.css - Y2K Aesthetic Update */
 .container {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  text-align: center;
+  background-color: #FFF;
+  border: 2px solid #0000FF; /* Bold border */
+  box-shadow: 5px 5px 0 #0000FF; /* Simple shadow */
+}
+
+.button {
+  background-image: linear-gradient(to bottom, #99CCFF, #6699FF);
+  border: 1px solid #0000FF;
+  padding: 10px;
+  font-size: 16px;
+  color: #003366;
+  text-shadow: 1px 1px #FFFFFF;
+  cursor: pointer;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+}
+
+.button:hover {
+  background-image: linear-gradient(to bottom, #6699FF, #3366CC);
 }
 
 .textarea {
-  width: 100%;
-  height: 200px;
-  margin-top: 20px;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  background-color: #C0C0C0;
+  color: #003366;
+  border: 1px solid #0000FF;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+  width: 100%;
+  height: 150px;
+  margin-top: 10px;
 }
 
 .dropdown {
-  margin-top: 20px;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  background-color: #C0C0C0;
+  color: #003366;
+  border: 1px solid #0000FF;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  margin-top: 10px;
   width: 100%;
 }
