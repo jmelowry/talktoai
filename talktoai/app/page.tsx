@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
-// Add global declarations for window object
 declare global {
   interface Window {
     SpeechRecognition: SpeechRecognition;
@@ -11,7 +10,6 @@ declare global {
   }
 }
 
-// SpeechRecognition interfaces
 interface SpeechRecognition extends EventTarget {
   new(): SpeechRecognition;
   continuous: boolean;
@@ -20,6 +18,9 @@ interface SpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   onresult: (event: SpeechRecognitionEvent) => void;
+  onend: () => void;
+  onstart: () => void;
+  onsoundend: () => void;
 }
 
 interface SpeechRecognitionEvent {
@@ -30,11 +31,12 @@ interface SpeechRecognitionEvent {
 interface SpeechRecognitionResultList {
   length: number;
   item: (index: number) => SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult; // Add index signature
+  [index: number]: SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
   isFinal: boolean;
+  length: number;
   item: (index: number) => SpeechRecognitionAlternative;
 }
 
@@ -42,7 +44,6 @@ interface SpeechRecognitionAlternative {
   transcript: string;
 }
 
-// MediaDeviceInfo interface
 interface MediaDeviceInfo {
   deviceId: string;
   kind: string;
@@ -56,9 +57,21 @@ export default function Home() {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedInput, setSelectedInput] = useState('');
-  const textAreaRef = useRef(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const recognition = useRef<SpeechRecognition | null>(null);
+  const recognitionActive = useRef<boolean>(false);
+
   const toggleListening = () => {
     setIsListening(!isListening);
+    if (!recognition.current) return;
+
+    if (!isListening && !recognitionActive.current) {
+      recognition.current.start();
+      recognitionActive.current = true;
+    } else {
+      recognition.current.stop();
+      recognitionActive.current = false;
+    }
   };
 
   useEffect(() => {
@@ -81,18 +94,22 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (isListening && typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
+    if (typeof window !== 'undefined') {
+      // Initialize recognition instance
+      recognition.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      const recognitionInstance = recognition.current;
   
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      // Configure recognition instance
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
+  
+      // Event handlers
+      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const result = event.results.item(i);
-          for (let j = 0; j < result.item.length; j++) {
+          for (let j = 0; j < result.length; j++) {
             const alternative = result.item(j);
             if (result.isFinal) {
               setFinalTranscript(prev => prev + alternative.transcript + ' ');
@@ -103,10 +120,36 @@ export default function Home() {
         }
         setInterimTranscript(interim);
       };
-      
   
-      recognition.start();
-      return () => recognition.stop();
+      recognitionInstance.onend = () => {
+        recognitionActive.current = false;
+      };
+  
+      recognitionInstance.onstart = () => {
+        recognitionActive.current = true;
+      };
+  
+      let restartTimeout;
+      recognitionInstance.onsoundend = () => {
+        if (isListening && !recognitionActive.current) {
+          restartTimeout = setTimeout(() => {
+            if (isListening && !recognitionActive.current) {
+              recognitionInstance.start();
+              recognitionActive.current = true;
+            }
+          }, 1000);
+        }
+      };
+  
+      if (isListening) {
+        recognitionInstance.start();
+      }
+  
+      return () => {
+        clearTimeout(restartTimeout);
+        recognitionInstance.stop();
+        recognitionActive.current = false;
+      };
     }
   }, [isListening]);
   
