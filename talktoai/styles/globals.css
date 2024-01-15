@@ -1,0 +1,9 @@
+body {
+    background-image: url('/images/background.png');
+    background-size: cover;
+    background-repeat: repeat;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
