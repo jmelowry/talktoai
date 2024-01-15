@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
+import '../styles/globals.css';
 
 declare global {
   interface Window {
