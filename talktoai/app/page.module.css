@@ -1,4 +1,4 @@
-/* page.module.css - Y2K Aesthetic Update */
+/* Base styles */
 .container {
   max-width: 800px;
   margin: 0 auto;
@@ -6,21 +6,6 @@
   background-color: #FFF;
   border: 2px solid #0000FF; /* Bold border */
   box-shadow: 5px 5px 0 #0000FF; /* Simple shadow */
-}
-
-.button {
-  background-image: linear-gradient(to bottom, #99CCFF, #6699FF);
-  border: 1px solid #0000FF;
-  padding: 10px;
-  font-size: 16px;
-  color: #003366;
-  text-shadow: 1px 1px #FFFFFF;
-  cursor: pointer;
-  font-family: 'Comic Sans MS', 'Arial', sans-serif;
-}
-
-.button:hover {
-  background-image: linear-gradient(to bottom, #6699FF, #3366CC);
 }
 
 .textarea {
@@ -39,7 +24,80 @@
   background-color: #C0C0C0;
   color: #003366;
   border: 1px solid #0000FF;
-  padding: 10px;
+  padding: 5px;
   margin-top: 10px;
   width: 100%;
+}
+
+/* Button styles */
+.button {
+  background-image: linear-gradient(to bottom, #99CCFF, #6699FF);
+  border: 1px solid #0000FF;
+  padding: 10px;
+  font-size: 16px;
+  color: #003366;
+  text-shadow: 1px 1px #FFFFFF;
+  cursor: pointer;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-image: linear-gradient(to bottom, #6699FF, #3366CC);
+}
+
+/* Listening button styles */
+.button.listening {
+  background-image: none; /* Reset the gradient */
+  background-color: #ff0000; /* Red background */
+  color: #fff; /* White text */
+  animation: slowPulse 2s infinite;
+}
+
+.button.listening:hover {
+  background-color: #cc0000; /* Darker red on hover */
+}
+
+/* Selector group styles */
+.selectors {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selectorGroup {
+  margin-top: 20px;
+  width: calc(50% - 10px); /* Adjust the 10px to your desired gap */
+}
+
+.selectorLabel {
+  display: block;
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  color: #003366;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+  .selectors {
+    flex-direction: column;
+  }
+
+  .selectorGroup {
+    width: 100%; /* Full width on smaller screens */
+  }
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slowPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+  70% { box-shadow: 0 0 10px 10px rgba(255, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
 }

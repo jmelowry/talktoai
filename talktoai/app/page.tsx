@@ -57,18 +57,19 @@ export default function Home() {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedInput, setSelectedInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState('GPT-3.5');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
 
   const toggleListening = () => {
     if (!recognition.current) return;
 
+    setIsListening(!isListening);
     if (!isListening) {
       recognition.current.start();
     } else {
       recognition.current.stop();
     }
-    setIsListening(!isListening);
   };
 
   useEffect(() => {
@@ -121,27 +122,53 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <button onClick={toggleListening}>
+    <h1 className={styles.title}>Chat-O-Matic</h1>
+
+    <div className={styles.container}>
+      <button
+        onClick={toggleListening}
+        className={`${styles.button} ${isListening ? styles.listening : ''}`}
+      >
         {isListening ? 'Stop Listening' : 'Start Listening'}
       </button>
-      {isListening && <p>Listening...</p>}
       <textarea
         ref={textAreaRef}
         value={finalTranscript + interimTranscript}
         readOnly
         className={styles.textarea}
       />
-      <select
-        value={selectedInput}
-        onChange={e => setSelectedInput(e.target.value)}
-        className={styles.dropdown}
-      >
-        {audioInputs.map(input => (
-          <option key={input.deviceId} value={input.deviceId}>
-            {input.label}
-          </option>
-        ))}
-      </select>
+
+      <div className={styles.selectors}>
+        <div className={styles.selectorGroup}>
+          <label htmlFor="audioInput" className={styles.selectorLabel}>Audio Input</label>
+          <select
+            id="audioInput"
+            value={selectedInput}
+            onChange={e => setSelectedInput(e.target.value)}
+            className={styles.dropdown}
+          >
+            {audioInputs.map(input => (
+              <option key={input.deviceId} value={input.deviceId}>
+                {input.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.selectorGroup}>
+          <label htmlFor="modelSelect" className={styles.selectorLabel}>Model</label>
+          <select
+            id="modelSelect"
+            value={selectedModel}
+            onChange={e => setSelectedModel(e.target.value)}
+            className={styles.dropdown}
+          >
+            <option value="GPT-3.5 Turbo">GPT-3.5</option>
+            <option value="GPT-4">GPT-4</option>
+          </select>
+        </div>
+      </div>
     </div>
+  </div>
   );
 }
