@@ -97,13 +97,16 @@ export default function Home() {
 
   const validateApiKey = async () => {
     try {
-      const response = await fetch('https://api.openai.com/v1/engines', {
+      const response = await fetch('/api/validate-key', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${selectedApiKey}`
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ apiKey: selectedApiKey }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+      if (data.valid) {
         // Key is valid
         setApiKeyValid(true);
         console.log('API Key is valid');
@@ -115,7 +118,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error validating API key:', error);
     }
-  }
+  };
 
   useEffect(() => {
     // Check if the API key is stored in local storage and retrieve it
@@ -212,9 +215,10 @@ export default function Home() {
             className={styles.input}
           />
           {apiKeyValid === false && (
-            <span className={styles.validationEmoji}>
-              ⛔️
-            </span>
+            <span className={styles.validationEmoji}>⛔️</span>
+          )}
+          {apiKeyValid === true && (
+            <span className={styles.validationEmoji}>✅</span>
           )}
           <button onClick={validateApiKey} className={styles.validateButton}>
             Validate Key
