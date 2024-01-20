@@ -19,7 +19,7 @@ declare global {
 }
 
 interface SpeechRecognition extends EventTarget {
-  new (): SpeechRecognition;
+  new(): SpeechRecognition;
   continuous: boolean;
   interimResults: boolean;
   lang: string;
@@ -71,8 +71,8 @@ export default function Home() {
   const [apiKeySaved, setApiKeySaved] = useState(false); // New state for API key saved message
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
+  const [apiKeyValid, setApiKeyValid] = useState(null); // null initially
 
-  
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newApiKey = e.target.value;
     setSelectedApiKey(newApiKey);
@@ -94,6 +94,28 @@ export default function Home() {
       localStorage.removeItem('api_key');
     }
   };
+
+  const validateApiKey = async () => {
+    try {
+      const response = await fetch('https://api.openai.com/v1/engines', {
+        headers: {
+          'Authorization': `Bearer ${selectedApiKey}`
+        }
+      });
+
+      if (response.ok) {
+        // Key is valid
+        setApiKeyValid(true);
+        console.log('API Key is valid');
+      } else {
+        // Key is not valid
+        setApiKeyValid(false);
+        console.log('API Key is not valid');
+      }
+    } catch (error) {
+      console.error('Error validating API key:', error);
+    }
+  }
 
   useEffect(() => {
     // Check if the API key is stored in local storage and retrieve it
@@ -178,13 +200,25 @@ export default function Home() {
         </button>
 
         <div className={styles.apiKeyInput}>
+          <label htmlFor="apiKey" className={styles.selectorLabel}>
+            OpenAI API Key
+          </label>
           <input
-            type="text"
+            id="apiKey"
+            type={apiKeyValid ? "password" : "text"}
             value={selectedApiKey}
             onChange={handleApiKeyChange}
             placeholder="Enter API Key"
             className={styles.input}
           />
+          {apiKeyValid === false && (
+            <span className={styles.validationEmoji}>
+              ⛔️
+            </span>
+          )}
+          <button onClick={validateApiKey} className={styles.validateButton}>
+            Validate Key
+          </button>
           {apiKeySaved && (
             <div className={styles.apiKeySavedMessage}>API Key Saved!</div>
           )}
