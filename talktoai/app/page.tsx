@@ -3,13 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 import '../styles/globals.css';
-import {
-  setApiKey,
-  setModel,
-  setInitialSystemPrompt,
-  addUserMessage,
-  sendConversationToOpenAI,
-} from './openaiService';
 
 declare global {
   interface Window {
@@ -71,7 +64,7 @@ export default function Home() {
   const [apiKeySaved, setApiKeySaved] = useState(false); // New state for API key saved message
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
-  const [apiKeyValid, setApiKeyValid] = useState(null); // null initially
+  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newApiKey = e.target.value;
