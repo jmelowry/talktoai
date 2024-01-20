@@ -229,6 +229,8 @@ export default function Home() {
         value={finalTranscript + interimTranscript}
         readOnly
         className={styles.textarea}
+        id="page_textarea"
+        name="pageTextarea"
       />
 
       <div className={styles.selectors}>
