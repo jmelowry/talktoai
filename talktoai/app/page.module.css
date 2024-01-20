@@ -14,6 +14,29 @@
   box-shadow: 5px 5px 0 #0000FF; /* Blue shadow */
 }
 
+.topControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mainContent {
+  display: flex;
+  justify-content: space-between;
+}
+
+.leftContent {
+  flex-grow: 1;
+}
+
+.apiKeyContainer {
+  margin-left: 20px; /* Adjust as needed */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+
 .textarea {
   font-family: 'Comic Sans MS', 'Arial', sans-serif;
   background-color: #C0C0C0;

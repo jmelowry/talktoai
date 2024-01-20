@@ -1,9 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import styles from './page.module.css';
 import '../styles/globals.css';
+import {
+  setApiKey,
+  setModel,
+  setInitialSystemPrompt,
+  addUserMessage,
+  sendConversationToOpenAI,
+} from './openaiService';
 
 declare global {
   interface Window {
@@ -13,7 +19,7 @@ declare global {
 }
 
 interface SpeechRecognition extends EventTarget {
-  new(): SpeechRecognition;
+  new (): SpeechRecognition;
   continuous: boolean;
   interimResults: boolean;
   lang: string;
@@ -60,8 +66,43 @@ export default function Home() {
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedInput, setSelectedInput] = useState('');
   const [selectedModel, setSelectedModel] = useState('GPT-3.5');
+  const [selectedApiKey, setSelectedApiKey] = useState('');
+  const [rememberApiKey, setRememberApiKey] = useState(false); // New state for "Remember Me"
+  const [apiKeySaved, setApiKeySaved] = useState(false); // New state for API key saved message
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<SpeechRecognition | null>(null);
+
+  
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value;
+    setSelectedApiKey(newApiKey);
+
+    // Check if the "Remember Me" checkbox is checked
+    if (rememberApiKey) {
+      // Save the API key to local storage
+      localStorage.setItem('api_key', newApiKey);
+
+      // Set the API key saved message
+      setApiKeySaved(true);
+
+      // Clear the message after a few seconds (e.g., 3 seconds)
+      setTimeout(() => {
+        setApiKeySaved(false);
+      }, 3000);
+    } else {
+      // Remove the API key from local storage
+      localStorage.removeItem('api_key');
+    }
+  };
+
+  useEffect(() => {
+    // Check if the API key is stored in local storage and retrieve it
+    const storedApiKey = localStorage.getItem('api_key');
+    if (storedApiKey) {
+      setSelectedApiKey(storedApiKey);
+      setRememberApiKey(true);
+    }
+  }, []);
 
   const toggleListening = () => {
     if (!recognition.current) return;
@@ -74,20 +115,22 @@ export default function Home() {
     }
   };
 
+  // UseEffect to fetch audio inputs
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
         return navigator.mediaDevices.enumerateDevices();
       })
-      .then(devices => {
-        const inputs = devices.filter(device => device.kind === 'audioinput');
+      .then((devices) => {
+        const inputs = devices.filter((device) => device.kind === 'audioinput');
         setAudioInputs(inputs);
-        const defaultInput = inputs.find(input => input.label.includes('Built-in'));
+        const defaultInput = inputs.find((input) => input.label.includes('Built-in'));
         if (defaultInput) {
           setSelectedInput(defaultInput.deviceId);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Microphone access denied:', err);
       });
   }, []);
@@ -107,7 +150,7 @@ export default function Home() {
           for (let j = 0; j < result.length; j++) {
             const alternative = result.item(j);
             if (result.isFinal) {
-              setFinalTranscript(prev => prev + alternative.transcript + ' ');
+              setFinalTranscript((prev) => prev + alternative.transcript + ' ');
             } else {
               interim += alternative.transcript;
             }
@@ -124,15 +167,30 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-    <h1 className={styles.title}>Chat-O-Matic</h1>
+      <h1 className={styles.title}>Chat-O-Matic</h1>
 
-    <div className={styles.container}>
-      <button
-        onClick={toggleListening}
-        className={`${styles.button} ${isListening ? styles.listening : ''}`}
-      >
-        {isListening ? 'Stop Listening' : 'Start Listening'}
-      </button>
+      <div className={styles.topControls}>
+        <button
+          onClick={toggleListening}
+          className={`${styles.button} ${isListening ? styles.listening : ''}`}
+        >
+          {isListening ? 'Stop Listening' : 'Start Listening'}
+        </button>
+
+        <div className={styles.apiKeyInput}>
+          <input
+            type="text"
+            value={selectedApiKey}
+            onChange={handleApiKeyChange}
+            placeholder="Enter API Key"
+            className={styles.input}
+          />
+          {apiKeySaved && (
+            <div className={styles.apiKeySavedMessage}>API Key Saved!</div>
+          )}
+        </div>
+      </div>
+
       <textarea
         ref={textAreaRef}
         value={finalTranscript + interimTranscript}
@@ -146,10 +204,10 @@ export default function Home() {
           <select
             id="audioInput"
             value={selectedInput}
-            onChange={e => setSelectedInput(e.target.value)}
+            onChange={(e) => setSelectedInput(e.target.value)}
             className={styles.dropdown}
           >
-            {audioInputs.map(input => (
+            {audioInputs.map((input) => (
               <option key={input.deviceId} value={input.deviceId}>
                 {input.label}
               </option>
@@ -162,15 +220,14 @@ export default function Home() {
           <select
             id="modelSelect"
             value={selectedModel}
-            onChange={e => setSelectedModel(e.target.value)}
+            onChange={(e) => setSelectedModel(e.target.value)}
             className={styles.dropdown}
           >
-            <option value="GPT-3.5 Turbo">GPT-3.5</option>
+            <option value="GPT-3.5">GPT-3.5</option>
             <option value="GPT-4">GPT-4</option>
           </select>
         </div>
       </div>
     </div>
-  </div>
   );
 }
