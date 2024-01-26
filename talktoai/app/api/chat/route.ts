@@ -9,6 +9,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { apiKey, model, userMessage, initialSystemPrompt } = body;
 
+    // Log the request details for debugging
+    console.log('Received Request:', {
+      // if key is entered, include asterisks
+      apiKey: apiKey ? '********' : null,
+      model: model,
+      userMessage: userMessage,
+      initialSystemPrompt: initialSystemPrompt
+    });
+
     // Initialize OpenAI client with the provided API key
     const client = new OpenAI({ apiKey });
 
@@ -20,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     // Send the message to OpenAI
     const response = await client.chat.completions.create({
-      model: model, // Use the selected model
+      model: model,
       messages: messages,
     });
 

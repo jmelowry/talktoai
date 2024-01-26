@@ -64,9 +64,12 @@ export default function Home() {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedInput, setSelectedInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState('GPT-3.5');
+  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo-1106');
   const [selectedApiKey, setSelectedApiKey] = useState('');
   const [rememberApiKey, setRememberApiKey] = useState(false); // New state for "Remember Me"
+  const handleRememberApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberApiKey(e.target.checked);
+  };
   const [apiKeySaved, setApiKeySaved] = useState(false); // New state for API key saved message
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -172,7 +175,9 @@ export default function Home() {
   const handleSubmit = async () => {
     // Replace placeholders with actual variables
     const userMessage = finalTranscript; // Assuming finalTranscript is the state variable storing the dictated message
-    const selectedModel = selectedModel; // Assuming selectedModel is the state variable for the model
+    const selectedModel: string = ""; // Assuming selectedModel is the state variable for the model
+    // Remove the assignment statement since selectedModel is already a constant
+    // selectedModel = selectedModel; // Assuming selectedModel is the state variable for the model
     const initialSystemPrompt = "You are chatting with an AI assistant."; // This can be a predefined prompt
     const apiKey = selectedApiKey; // Assuming selectedApiKey is the state variable for the API key
 
@@ -220,18 +225,22 @@ export default function Home() {
   }, []);
 
   const toggleListening = () => {
-    if (!recognition.current) return;
-
+    if (!recognitionRef.current) return;
+  
     if (!isListening) {
-      recognition.current.start();
+      recognitionRef.current.start();
+      setFinalTranscript(''); // Reset the final transcript when starting
+      setInterimTranscript(''); // Also reset the interim transcript
     } else {
-      recognition.current.stop();
-      // Here, you can use `dictatedText` for the API request
-      sendTextToOpenAI(dictatedText);
+      recognitionRef.current.stop();
+      setFinalTranscript((prev) => prev + interimTranscript); // Append any remaining interim transcript to the final transcript
+      sendTextToOpenAI(finalTranscript + interimTranscript); // Send the complete text to OpenAI
+      setInterimTranscript(''); // Reset the interim transcript after stopping
     }
-
+  
     setIsListening(!isListening);
   };
+
   // UseEffect to fetch audio inputs
   useEffect(() => {
     navigator.mediaDevices
@@ -252,10 +261,11 @@ export default function Home() {
       });
   }, []);
 
-  const sendTextToOpenAI = async (text) => {
+  const sendTextToOpenAI = async (text: string) => {
     // Use the state values directly
     const userApiKey = selectedApiKey;
-    const selectedModel = selectedModel;
+    // Remove the redundant declaration and assignment of 'selectedModel'
+    // const selectedModel: string = selectedModel;
     const initialSystemPrompt = "You are chatting with an AI assistant."; // This can be a constant or a state variable
 
     try {
@@ -294,17 +304,16 @@ export default function Home() {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const result = event.results.item(i);
-          for (let j = 0; j < result.length; j++) {
-            const alternative = result.item(j);
-            if (result.isFinal) {
-              setFinalTranscript((prev) => prev + alternative.transcript + ' ');
-            } else {
-              interim += alternative.transcript;
-            }
+          const transcript = result[0].transcript;
+          if (result.isFinal) {
+            setFinalTranscript((prev) => prev + transcript + ' ');
+          } else {
+            interim += transcript;
           }
         }
-        setInterimTranscript(interim);
+        setInterimTranscript(interim); // Update only the interim transcript
       };
+      
 
       recognitionInstance.onend = () => {
         setIsListening(false);
@@ -354,6 +363,15 @@ export default function Home() {
           {apiKeySaved && (
             <div className={styles.apiKeySavedMessage}>API Key Saved!</div>
           )}
+          <div className={styles.rememberMeCheckbox}>
+            <input
+              type="checkbox"
+              id="rememberApiKey"
+              checked={rememberApiKey}
+              onChange={handleRememberApiKeyChange}
+            />
+            <label htmlFor="rememberApiKey">Remember Me</label>
+          </div>
         </div>
       </div>
   
@@ -391,7 +409,7 @@ export default function Home() {
             onChange={(e) => setSelectedModel(e.target.value)}
             className={styles.dropdown}
           >
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="gpt-3.5-turbo-1106">gpt-3.5-turbo-1106</option>
             <option value="GPT-4">GPT-4</option>
             <option value="gpt-4-1106-preview">GPT-4 Turbo</option>
           </select>
@@ -399,6 +417,5 @@ export default function Home() {
       </div>
     </div>
   );
-  
 }
 
