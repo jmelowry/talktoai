@@ -11,11 +11,10 @@ export async function POST(req: NextRequest) {
 
     // Log the request details for debugging
     console.log('Received Request:', {
-      // if key is entered, include asterisks
-      apiKey: apiKey ? '********' : null,
-      model: model,
-      userMessage: userMessage,
-      initialSystemPrompt: initialSystemPrompt
+      apiKey: apiKey ? '********' : null, // Mask the API key for logging
+      model,
+      userMessage,
+      initialSystemPrompt
     });
 
     // Initialize OpenAI client with the provided API key
@@ -30,7 +29,7 @@ export async function POST(req: NextRequest) {
     // Send the message to OpenAI
     const response = await client.chat.completions.create({
       model: model,
-      messages: messages,
+      messages: messages as any[]
     });
 
     // Extract the AI response
@@ -39,13 +38,14 @@ export async function POST(req: NextRequest) {
     // Return the AI response
     return new Response(JSON.stringify({ aiResponse }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    // Log and return any errors
     console.error('Error processing chat request:', error);
     return new Response(JSON.stringify({ error: 'Error processing request' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }

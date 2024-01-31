@@ -86,7 +86,7 @@ export default function Home() {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const result = event.results[i];
-          const transcript = result[0].transcript;
+          const transcript = result.item(0).transcript;
           if (result.isFinal) {
             setDictatedText(prev => prev + transcript + ' ');
           } else {
@@ -304,7 +304,7 @@ export default function Home() {
         let interim = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const result = event.results.item(i);
-          const transcript = result[0].transcript;
+          const transcript = result.item(0)?.transcript || '';
           if (result.isFinal) {
             setFinalTranscript((prev) => prev + transcript + ' ');
           } else {
