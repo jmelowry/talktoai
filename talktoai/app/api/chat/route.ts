@@ -7,15 +7,29 @@ export async function POST(req: NextRequest) {
   try {
     // Parse the request body
     const body = await req.json();
-    const { apiKey, message } = body;
+    const { apiKey, model, userMessage, initialSystemPrompt } = body;
+
+    // Log the request details for debugging
+    console.log('Received Request:', {
+      apiKey: apiKey ? '********' : null, // Mask the API key for logging
+      model,
+      userMessage,
+      initialSystemPrompt
+    });
 
     // Initialize OpenAI client with the provided API key
     const client = new OpenAI({ apiKey });
 
+    // Prepare the messages array including the initial system prompt and the user message
+    const messages = [
+      { role: 'system', content: initialSystemPrompt },
+      { role: 'user', content: userMessage }
+    ];
+
     // Send the message to OpenAI
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo', // or any other model you prefer
-      messages: [{ role: 'user', content: message }],
+      model: model,
+      messages: messages as any[]
     });
 
     // Extract the AI response
@@ -24,14 +38,14 @@ export async function POST(req: NextRequest) {
     // Return the AI response
     return new Response(JSON.stringify({ aiResponse }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    // Handle any errors
+    // Log and return any errors
     console.error('Error processing chat request:', error);
     return new Response(JSON.stringify({ error: 'Error processing request' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
   }
 }
